@@ -3,9 +3,9 @@ class Algorithms:
     """
     def __init__(self, logger: bool = True):
         self.logger = logger
-        '''The 'logger' variable includes the implementation of a simple logging system for the algorithms to make their work 
-        clear. It is recommended to use the value of the variable logger = 'True' while learning. When using the algorithms 
-        in your own applications use the default value or 'False'.
+        '''The 'logger' variable includes the implementation of a simple logging system for the algorithms to make their 
+        work clear. It is recommended to use the value of the variable logger = 'True' while learning. 
+        When using the algorithms in your own applications use the default value or 'False'.
         '''
 
     @staticmethod
@@ -35,7 +35,7 @@ class Algorithms:
         :param reverse: flag for sort in descending order.
         :return: sorted list
         """
-        args.sort(key = key, reverse=reverse)
+        args.sort(key=key, reverse=reverse)
         return args
 
     def my_mod(self, a: int, b: int):
@@ -91,10 +91,8 @@ class Algorithms:
                     print(f'result: {b}')
                 return b
 
-                break
             b = self.my_mod(b, a)[1]
             if b == 0:
                 if self.logger:
                     print(f'result: {a}')
                 return a
-                break

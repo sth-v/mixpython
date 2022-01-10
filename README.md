@@ -1,13 +1,19 @@
 # MIX python
 
-This is a simple example package. You can use
-[Github-flavored Markdown](https://guides.github.com/features/mastering-markdown/)
-to write your content.
+This package is both a tutorial paper and a library of classic TAOCP algorithms in the Python language
 
-`py -m pip install --upgrade pip  `
+_**The Art of Computer Programming ([TAOCP](https://en.wikipedia.org/wiki/The_Art_of_Computer_Programming))**_ is a comprehensive monograph written by computer scientist Donald Knuth that covers many kinds of programming algorithms and their analysis.
 
-`py -m pip install --upgrade build`
-`py -m build`
+Install:
 
-`py -m pip install --upgrade twine `
-`py -m twine upload dist/*`
+`pip install mixpython`
+
+Simple usage:
+
+```
+import mixpython.algorithms as mix
+
+alg = mix.Algorithms(logger=True) # mix.Algorithms - A base class that implements the algorithms and minimum settings
+
+alg.euclid_e(45678, 86)
+```

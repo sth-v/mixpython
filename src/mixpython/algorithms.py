@@ -17,7 +17,7 @@ class Algorithms:
         """
 
         return [*args]
-    list.sort()
+
     @staticmethod
     def sort(args: list, key:None = None, reverse: bool = True):
         """

@@ -19,7 +19,7 @@ class Algorithms:
         return [*args]
 
     @staticmethod
-    def sort(args: list, key:None = None, reverse: bool = True):
+    def sort(args: list, key: None = None, reverse: bool = True):
         """
         Sort the list in ascending order and return list
 
@@ -82,7 +82,7 @@ class Algorithms:
         :param b: int second value
         :return: int GCD value
         """
-        a, b = self.sort(self.pack(a, b), True)
+        a, b = self.sort(self.pack(a, b), reverse=True)
 
         while True:
             a = self.my_mod(a, b)[1]

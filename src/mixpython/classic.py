@@ -4,7 +4,7 @@ from mathtools import floor_div
 """A base class that implements the algorithms and minimum settings"""
 
 
-def e(self, a: int, b: int):
+def e(a: int, b: int):
     """
     Euclidean algorithm(GCD) - An effective algorithm for finding the greatest common divisor of two integers
 
@@ -22,8 +22,6 @@ def e(self, a: int, b: int):
         a = b
         b = r
 
-    if self.logger:
-        print(f'result: {b}')
     return b
 
 

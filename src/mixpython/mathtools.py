@@ -1,9 +1,7 @@
-from logger import logger as log
-
-LOGGER = log
+from logger import logger
 
 
-def floor_div(a: int, b: int, logger: bool = LOGGER):
+def floor_div(a: int, b: int, logger: bool = logger):
     """
     Integer division, returns the quotient and remainder
 
@@ -19,7 +17,7 @@ def floor_div(a: int, b: int, logger: bool = LOGGER):
 
 
 class Induction:
-    def __init__(self, logger: bool = LOGGER):
+    def __init__(self, logger: bool = logger):
         self.logger = logger
 
     def base_proof(self):

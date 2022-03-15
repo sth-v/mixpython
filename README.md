@@ -11,9 +11,9 @@ Install:
 Simple usage:
 
 ```
-import mixpython.algorithms as mix
+import mixpython.classic as mix
 
-alg = mix.Algorithms(logger=True) # mix.Algorithms - A base class that implements the algorithms and minimum settings
+# mixpython.classic - A base class that implements the algorithms and minimum settings
 
-alg.euclid_e(45678, 86)
+mix.e(45678, 86)
 ```

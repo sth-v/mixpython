@@ -1,31 +1,8 @@
 import numpy as np
 from numpy import ndarray
 from scipy.spatial import ConvexHull
-from sklearn.cluster import KMeans
-from functools import wraps
-
-
-def __curry__(func):
-    """
-    >>> @__curry__
-    ... def foo(a, b, c):
-    ...     return a + b + c
-    >>> foo(1)
-    <function __main__.foo>
-    """
-
-    @wraps(func)
-    def curried(*args, **kwargs):
-        if len(args) + len(kwargs) >= func.__code__.co_argcount:
-            return func(*args, **kwargs)
-
-        @wraps(func)
-        def new_curried(*args2, **kwargs2):
-            return curried(*(args + args2), **dict(kwargs, **kwargs2))
-
-        return new_curried
-
-    return curried
+from sklearn.cluster import KMeans, DBSCAN, OPTICS
+from time import gmtime, strftime
 
 
 def point_line_side(points, line_start, line_end):
@@ -128,6 +105,32 @@ def minimum_bound_rectangle(points: ndarray):
     return rval
 
 
+def ccw(A, B, C):
+    """Tests whether the turn formed by A, B, and C is ccw"""
+    return (B.x - A.x) * (C.y - A.y) > (B.y - A.y) * (C.x - A.x)
+
+
+def intersectsAbove(verts, v, u):
+    """
+        Returns True if uv intersects the polygon defined by 'verts' above v.
+        Assumes v is the index of a vertex in 'verts', and u is outside of the
+        polygon.
+    """
+    n = len(verts)
+
+    # Test if two adjacent vertices are on same side of line (implies
+    # tangency)
+    if ccw(u, verts[v], verts[(v - 1) % n]) == ccw(u, verts[v], verts[(v + 1) % n]):
+        return False
+
+    # Test if u and v are on same side of line from adjacent
+    # vertices
+    if ccw(verts[(v - 1) % n], verts[(v + 1) % n], u) == ccw(verts[(v - 1) % n], verts[(v + 1) % n], verts[v]):
+        return u.y > verts[v].y
+    else:
+        return u.y < verts[v].y
+
+
 def get_clusters(data: ndarray, labels):
     """
     :param data: The dataset
@@ -138,127 +141,59 @@ def get_clusters(data: ndarray, labels):
     return [data[np.where(labels == i)] for i in range(np.amax(labels) + 1)]
 
 
-class SortedKMean(object):
-    """
-    >>> points = np.array([[[661.0, 249.0], [750.0, 274.0], [635.0, 276.0]],
-    ...            [[706.0, 355.0], [635.0, 276.0], [750.0, 274.0]],
-    ...            [[706.0, 355.0], [750.0, 274.0], [778.0, 334.0]],
-    ...            [[778.0, 334.0], [672.0, 398.0], [706.0, 355.0]],
-    ...            [[606.0, 492.0], [672.0, 398.0], [747.0, 511.0]],
-    ...            [[598.0, 428.0], [672.0, 398.0], [606.0, 492.0]],
-    ...            [[778.0, 334.0], [747.0, 511.0], [672.0, 398.0]]], dtype = np.float64).reshape((21,2))
-    >>> points
-    array([[661., 249.],
-           [750., 274.],
-           [635., 276.],
-           [706., 355.],
-           [635., 276.],
-           [750., 274.],
-           [706., 355.],
-           [750., 274.],
-           [778., 334.],
-           [778., 334.],
-           [672., 398.],
-           [706., 355.],
-           [606., 492.],
-           [672., 398.],
-           [747., 511.],
-           [598., 428.],
-           [672., 398.],
-           [606., 492.],
-           [778., 334.],
-           [747., 511.],
-           [672., 398.]])
-    >>> km = SortedKMean(points)
-    <__main__.SortedKMean at 0x24fd8dda6d0>
-    >>> def custom_solver(points, kmean, x):
-    ...     labels =  kmean().labels_
-    ...     return [points[np.where(labels == i)] * x for i in range(np.amax(labels) + 1)]
-    <function __main__.custom_solver(points, kmean, x)>
-    >>> km.calculate = custom_solver
-    ... km.calculate()
-    <function __main__.custom_solver(points, kmean, x)>
-    >>> km.calculate(x=3)
-    [array([[2016., 1194.],
-            [1818., 1476.],
-            [2016., 1194.],
-            [2241., 1533.],
-            [1794., 1284.],
-            [2016., 1194.],
-            [1818., 1476.],
-            [2241., 1533.],
-            [2016., 1194.]]),
-     array([[1983.,  747.],
-            [2250.,  822.],
-            [1905.,  828.],
-            [2118., 1065.],
-            [1905.,  828.],
-            [2250.,  822.],
-            [2118., 1065.],
-            [2250.,  822.],
-            [2334., 1002.],
-            [2334., 1002.],
-            [2118., 1065.],
-            [2334., 1002.]])]
-    """
-
-    def __init__(self, points, **kwargs):
-        self._points = points
-        self._n_clusters = 2
-        self._random_state = 0
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        self.kmean = lambda **x: KMeans(self._n_clusters, **dict({'random_state': self._random_state}, **x)).fit(
-            self.points)
-        self._calculate = None
-
-    @property
-    def points(self):
-        return self._points
-
-    @points.setter
-    def points(self, v):
-        self._points = v
-
-    @property
-    def n_clusters(self):
-        return self._n_clusters
-
-    @n_clusters.setter
-    def n_clusters(self, v):
-        self._n_clusters = v
-
-    @property
-    def random_state(self):
-        return self._random_state
-
-    @random_state.setter
-    def random_state(self, v):
-        self._random_state = v
-
-    @property
-    def calculate(self):
-        return self._calculate
-
-    @calculate.setter
-    def calculate(self, func):
-        kwarg = {}
-        for k in func.__code__.co_varnames:
-            if hasattr(self, k):
-                kwarg |= {k: getattr(self, k)}
-
-        self._calculate = __curry__(func)(**kwarg)
-
-
 def kmeans(points: ndarray, n_clusters: int, random_state=0, **kwargs):
-    """
-    p_function:  this function with parameter, supports layer-by-layer analytics
-    :param f:  some function, in case: a nx2 matrix of coordinates
-    :param p: p - parameter, in function - clusters count
-    :return: kmeans (sklearn.cluster.KMeans) , you can get :
-    kmeans.labels_,
-    kmeans.cluster_centers_
-    more info in the scikit-learn documentation
-    """
-
     return KMeans(n_clusters, random_state=random_state, **kwargs).fit(points)
+
+
+class Session(object):
+
+    def __new__(cls, *args, **kwargs):
+        sess_time = strftime("%d %b %Y %H:%M:%S", gmtime())
+        print(f"complete session at {sess_time}")
+        instance = cls(*args, init_time=sess_time, **kwargs)
+        return instance
+
+    def __init__(self, trained_model, solver, **kwargs):
+        self.trained_model = trained_model
+        self.solver = solver
+        for k, v in kwargs:
+            setattr(self, k, v)
+
+    def save(self):
+        pass
+
+
+def labels_matching(points, labels):
+    return get_clusters(points, labels)
+
+
+class SpatialClustering(object):
+
+    def __init__(self, **kwargs):
+        self._kmeans = KMeans
+        self._dbscan = DBSCAN
+        self._optics = OPTICS
+
+        self.sessions = []
+
+        for k, v in kwargs:
+            setattr(self, k, v)
+
+    def kmeans(self, points, *args, custom_fit=lambda x: x, **kwargs):
+        res = self._kmeans(*args, **kwargs).fit(custom_fit(points))
+        res.matched_points = labels_matching(points, res.labels_)
+        self.sessions.append(Session(trained_model=res, solver=res.__class__))
+        return res
+
+    def dbscan(self, points, *args, custom_fit=lambda x: x, **kwargs):
+        res = self._dbscan(*args, **kwargs).fit(custom_fit(points))
+        res.matched_points = labels_matching(points, res.labels_)
+        self.sessions.append(Session(trained_model=res, solver=res.__class__))
+        return res
+
+    def optics(self, points, *args, custom_fit=lambda x: x, **kwargs):
+        res = self._optics(*args, **kwargs).fit(custom_fit(points))
+
+        res.matched_points = labels_matching(points, res.labels_)
+        self.sessions.append(Session(trained_model=res, solver=res.__class__))
+        return res
